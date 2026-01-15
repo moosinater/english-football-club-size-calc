@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>English Football Club Size Calculator | SPAnalytics</title>
+  <meta name="description" content="Compare and rank English football clubs based on revenue, trophies, stadium size, fanbase, and transfer spending.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // Trophy point values
+    const TROPHY_POINTS = {
+      league: 5,
+      ucl: 5,
+      faCup: 3,
+      europa: 3,
+      eflCup: 1,
+      other: 1,
+      shield: 1,
+    };
+
+    // Club data for Premier League and Championship 2025-26
+    const clubData = [
+      // Premier League 2025-26
+      { name: "Manchester United", league: "Premier League", revenue: 700, revenue2122: 583, revenue2223: 746, revenue2324: 771, trophies: { league: 20, ucl: 3, faCup: 13, europa: 2, eflCup: 6, other: 2, shield: 21 }, stadium: 74879, instagram: 64.5, plSeasons: 33, recordFee: 89, recordPlayer: "Paul Pogba" },
+      { name: "Manchester City", league: "Premier League", revenue: 798, revenue2122: 731, revenue2223: 826, revenue2324: 838, trophies: { league: 10, ucl: 1, faCup: 7, europa: 1, eflCup: 8, other: 2, shield: 7 }, stadium: 53400, instagram: 56, plSeasons: 25, recordFee: 100, recordPlayer: "Jack Grealish" },
+      { name: "Liverpool", league: "Premier League", revenue: 700, revenue2122: 702, revenue2223: 683, revenue2324: 715, trophies: { league: 20, ucl: 6, faCup: 8, europa: 3, eflCup: 10, other: 4, shield: 16 }, stadium: 61276, instagram: 45.8, plSeasons: 33, recordFee: 125, recordPlayer: "Alexander Isak" },
+      { name: "Arsenal", league: "Premier League", revenue: 561, revenue2122: 433, revenue2223: 533, revenue2324: 717, trophies: { league: 13, ucl: 0, faCup: 14, europa: 1, eflCup: 2, other: 1, shield: 17 }, stadium: 60704, instagram: 30.2, plSeasons: 33, recordFee: 105, recordPlayer: "Declan Rice" },
+      { name: "Chelsea", league: "Premier League", revenue: 543, revenue2122: 493, revenue2223: 589, revenue2324: 546, trophies: { league: 6, ucl: 2, faCup: 8, europa: 4, eflCup: 5, other: 2, shield: 4 }, stadium: 40343, instagram: 42.7, plSeasons: 33, recordFee: 121, recordPlayer: "Enzo Fernández" },
+      { name: "Tottenham Hotspur", league: "Premier League", revenue: 590, revenue2122: 523, revenue2223: 632, revenue2324: 615, trophies: { league: 2, ucl: 0, faCup: 8, europa: 4, eflCup: 4, other: 0, shield: 7 }, stadium: 62850, instagram: 17.2, plSeasons: 33, recordFee: 65, recordPlayer: "Dominic Solanke" },
+      { name: "Newcastle United", league: "Premier League", revenue: 280, revenue2122: 180, revenue2223: 288, revenue2324: 372, trophies: { league: 4, ucl: 0, faCup: 6, europa: 1, eflCup: 0, other: 0, shield: 0 }, stadium: 52305, instagram: 2.9, plSeasons: 27, recordFee: 63, recordPlayer: "Alexander Isak" },
+      { name: "Aston Villa", league: "Premier League", revenue: 232, revenue2122: 170, revenue2223: 215, revenue2324: 310, trophies: { league: 7, ucl: 1, faCup: 7, europa: 0, eflCup: 5, other: 1, shield: 1 }, stadium: 42749, instagram: 2.5, plSeasons: 25, recordFee: 52, recordPlayer: "Amadou Onana" },
+      { name: "West Ham United", league: "Premier League", revenue: 253, revenue2122: 200, revenue2223: 275, revenue2324: 283, trophies: { league: 0, ucl: 0, faCup: 3, europa: 1, eflCup: 0, other: 0, shield: 0 }, stadium: 62500, instagram: 2.8, plSeasons: 22, recordFee: 51, recordPlayer: "Lucas Paquetá" },
+      { name: "Brighton & Hove Albion", league: "Premier League", revenue: 200, revenue2122: 165, revenue2223: 210, revenue2324: 226, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 31800, instagram: 1.2, plSeasons: 8, recordFee: 40, recordPlayer: "Georginio Rutter" },
+      { name: "Crystal Palace", league: "Premier League", revenue: 175, revenue2122: 155, revenue2223: 178, revenue2324: 192, trophies: { league: 0, ucl: 0, faCup: 1, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 25486, instagram: 1.5, plSeasons: 11, recordFee: 27, recordPlayer: "Adam Wharton" },
+      { name: "Fulham", league: "Premier League", revenue: 165, revenue2122: 120, revenue2223: 170, revenue2324: 187, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 24500, instagram: 1.3, plSeasons: 16, recordFee: 30, recordPlayer: "Emile Smith Rowe" },
+      { name: "Wolverhampton Wanderers", league: "Premier League", revenue: 170, revenue2122: 160, revenue2223: 168, revenue2324: 182, trophies: { league: 3, ucl: 0, faCup: 4, europa: 0, eflCup: 2, other: 0, shield: 4 }, stadium: 31750, instagram: 2.1, plSeasons: 8, recordFee: 44, recordPlayer: "Matheus Cunha" },
+      { name: "Brentford", league: "Premier League", revenue: 145, revenue2122: 120, revenue2223: 150, revenue2324: 165, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 17250, instagram: 0.5, plSeasons: 4, recordFee: 30, recordPlayer: "Igor Thiago" },
+      { name: "Everton", league: "Premier League", revenue: 195, revenue2122: 185, revenue2223: 195, revenue2324: 205, trophies: { league: 9, ucl: 0, faCup: 5, europa: 1, eflCup: 0, other: 0, shield: 9 }, stadium: 52888, instagram: 4.0, plSeasons: 33, recordFee: 45, recordPlayer: "Gylfi Sigurdsson" },
+      { name: "Nottingham Forest", league: "Premier League", revenue: 170, revenue2122: 95, revenue2223: 180, revenue2324: 190, trophies: { league: 1, ucl: 2, faCup: 2, europa: 0, eflCup: 4, other: 2, shield: 1 }, stadium: 30404, instagram: 1.1, plSeasons: 6, recordFee: 38, recordPlayer: "Elliot Anderson" },
+      { name: "Bournemouth", league: "Premier League", revenue: 135, revenue2122: 90, revenue2223: 140, revenue2324: 155, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 11364, instagram: 0.7, plSeasons: 7, recordFee: 20, recordPlayer: "Dominic Solanke" },
+      { name: "Leeds United", league: "Premier League", revenue: 175, revenue2122: 190, revenue2223: 175, revenue2324: 160, trophies: { league: 3, ucl: 0, faCup: 1, europa: 2, eflCup: 1, other: 0, shield: 2 }, stadium: 37645, instagram: 2.3, plSeasons: 17, recordFee: 30, recordPlayer: "Georginio Rutter" },
+      { name: "Burnley", league: "Premier League", revenue: 120, revenue2122: 110, revenue2223: 100, revenue2324: 150, trophies: { league: 2, ucl: 0, faCup: 1, europa: 0, eflCup: 0, other: 0, shield: 2 }, stadium: 21944, instagram: 0.8, plSeasons: 9, recordFee: 25, recordPlayer: "Leander Dendoncker" },
+      { name: "Sunderland", league: "Premier League", revenue: 55, revenue2122: 45, revenue2223: 55, revenue2324: 65, trophies: { league: 6, ucl: 0, faCup: 2, europa: 0, eflCup: 0, other: 0, shield: 1 }, stadium: 49000, instagram: 1.2, plSeasons: 14, recordFee: 14, recordPlayer: "Didier Ndong" },
+      
+      // Championship 2025-26
+      { name: "Leicester City", league: "Championship", revenue: 160, revenue2122: 180, revenue2223: 155, revenue2324: 145, trophies: { league: 1, ucl: 0, faCup: 1, europa: 0, eflCup: 3, other: 0, shield: 2 }, stadium: 32259, instagram: 8.0, plSeasons: 14, recordFee: 40, recordPlayer: "Wesley Fofana" },
+      { name: "Southampton", league: "Championship", revenue: 145, revenue2122: 155, revenue2223: 140, revenue2324: 140, trophies: { league: 0, ucl: 0, faCup: 1, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 32384, instagram: 2.5, plSeasons: 14, recordFee: 20, recordPlayer: "Danny Ings" },
+      { name: "Ipswich Town", league: "Championship", revenue: 75, revenue2122: 40, revenue2223: 65, revenue2324: 120, trophies: { league: 1, ucl: 0, faCup: 1, europa: 1, eflCup: 0, other: 0, shield: 0 }, stadium: 30311, instagram: 0.6, plSeasons: 6, recordFee: 20, recordPlayer: "Liam Delap" },
+      { name: "Sheffield United", league: "Championship", revenue: 105, revenue2122: 85, revenue2223: 95, revenue2324: 135, trophies: { league: 1, ucl: 0, faCup: 4, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 32050, instagram: 1.0, plSeasons: 8, recordFee: 23, recordPlayer: "Rhian Brewster" },
+      { name: "Middlesbrough", league: "Championship", revenue: 70, revenue2122: 65, revenue2223: 70, revenue2324: 75, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 34742, instagram: 0.6, plSeasons: 15, recordFee: 15, recordPlayer: "Britt Assombalonga" },
+      { name: "Coventry City", league: "Championship", revenue: 40, revenue2122: 35, revenue2223: 40, revenue2324: 45, trophies: { league: 0, ucl: 0, faCup: 1, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 32609, instagram: 0.4, plSeasons: 9, recordFee: 8, recordPlayer: "Haji Wright" },
+      { name: "Norwich City", league: "Championship", revenue: 85, revenue2122: 100, revenue2223: 80, revenue2324: 75, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 2, other: 0, shield: 0 }, stadium: 27359, instagram: 0.9, plSeasons: 10, recordFee: 12, recordPlayer: "Josh Sargent" },
+      { name: "West Bromwich Albion", league: "Championship", revenue: 65, revenue2122: 70, revenue2223: 60, revenue2324: 65, trophies: { league: 1, ucl: 0, faCup: 5, europa: 0, eflCup: 1, other: 0, shield: 1 }, stadium: 26852, instagram: 0.6, plSeasons: 14, recordFee: 15, recordPlayer: "Nacer Chadli" },
+      { name: "Stoke City", league: "Championship", revenue: 55, revenue2122: 60, revenue2223: 55, revenue2324: 50, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 30089, instagram: 0.5, plSeasons: 10, recordFee: 18, recordPlayer: "Giannelli Imbula" },
+      { name: "Sheffield Wednesday", league: "Championship", revenue: 45, revenue2122: 40, revenue2223: 45, revenue2324: 50, trophies: { league: 4, ucl: 0, faCup: 3, europa: 0, eflCup: 1, other: 0, shield: 1 }, stadium: 39732, instagram: 0.5, plSeasons: 4, recordFee: 10, recordPlayer: "Jordan Rhodes" },
+      { name: "Blackburn Rovers", league: "Championship", revenue: 40, revenue2122: 38, revenue2223: 40, revenue2324: 42, trophies: { league: 3, ucl: 0, faCup: 6, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 31154, instagram: 0.4, plSeasons: 18, recordFee: 8, recordPlayer: "Andy Cole" },
+      { name: "Derby County", league: "Championship", revenue: 35, revenue2122: 30, revenue2223: 35, revenue2324: 40, trophies: { league: 2, ucl: 0, faCup: 1, europa: 0, eflCup: 0, other: 0, shield: 1 }, stadium: 33597, instagram: 0.6, plSeasons: 7, recordFee: 10, recordPlayer: "Matej Vydra" },
+      { name: "Bristol City", league: "Championship", revenue: 30, revenue2122: 28, revenue2223: 30, revenue2324: 32, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 27000, instagram: 0.3, plSeasons: 0, recordFee: 8, recordPlayer: "Andreas Weimann" },
+      { name: "Millwall", league: "Championship", revenue: 25, revenue2122: 23, revenue2223: 25, revenue2324: 27, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 20146, instagram: 0.2, plSeasons: 0, recordFee: 5, recordPlayer: "Ben Thompson" },
+      { name: "Preston North End", league: "Championship", revenue: 25, revenue2122: 23, revenue2223: 25, revenue2324: 27, trophies: { league: 2, ucl: 0, faCup: 2, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 23404, instagram: 0.2, plSeasons: 0, recordFee: 4, recordPlayer: "Daniel Johnson" },
+      { name: "Swansea City", league: "Championship", revenue: 50, revenue2122: 55, revenue2223: 50, revenue2324: 45, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 21088, instagram: 0.5, plSeasons: 7, recordFee: 15, recordPlayer: "Borja Bastón" },
+      { name: "Queens Park Rangers", league: "Championship", revenue: 30, revenue2122: 28, revenue2223: 30, revenue2324: 32, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 18439, instagram: 0.4, plSeasons: 7, recordFee: 12, recordPlayer: "Chris Samba" },
+      { name: "Hull City", league: "Championship", revenue: 28, revenue2122: 25, revenue2223: 28, revenue2324: 31, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 25400, instagram: 0.3, plSeasons: 6, recordFee: 10, recordPlayer: "Ryan Mason" },
+      { name: "Wrexham", league: "Championship", revenue: 22, revenue2122: 12, revenue2223: 20, revenue2324: 34, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 18000, instagram: 1.5, plSeasons: 0, recordFee: 3, recordPlayer: "Jack Marriott" },
+      { name: "Birmingham City", league: "Championship", revenue: 40, revenue2122: 38, revenue2223: 40, revenue2324: 42, trophies: { league: 2, ucl: 0, faCup: 2, europa: 0, eflCup: 2, other: 0, shield: 0 }, stadium: 29409, instagram: 0.5, plSeasons: 10, recordFee: 10, recordPlayer: "Emile Heskey" },
+      { name: "Oxford United", league: "Championship", revenue: 18, revenue2122: 14, revenue2223: 18, revenue2324: 22, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 1, other: 0, shield: 0 }, stadium: 12500, instagram: 0.1, plSeasons: 0, recordFee: 2, recordPlayer: "Mark Angel" },
+      { name: "Portsmouth", league: "Championship", revenue: 22, revenue2122: 18, revenue2223: 22, revenue2324: 26, trophies: { league: 2, ucl: 0, faCup: 2, europa: 0, eflCup: 0, other: 0, shield: 1 }, stadium: 20899, instagram: 0.4, plSeasons: 7, recordFee: 11, recordPlayer: "Peter Crouch" },
+      { name: "Charlton Athletic", league: "Championship", revenue: 20, revenue2122: 18, revenue2223: 20, revenue2324: 22, trophies: { league: 0, ucl: 0, faCup: 1, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 27111, instagram: 0.3, plSeasons: 8, recordFee: 5, recordPlayer: "Darren Bent" },
+      { name: "Watford", league: "Championship", revenue: 110, revenue2122: 130, revenue2223: 105, revenue2324: 95, trophies: { league: 0, ucl: 0, faCup: 0, europa: 0, eflCup: 0, other: 0, shield: 0 }, stadium: 22200, instagram: 0.9, plSeasons: 7, recordFee: 18, recordPlayer: "Ismaïla Sarr" },
+    ];
+
+    // Calculate trophy points for a club
+    const calculateTrophyPoints = (trophies) => {
+      return (
+        trophies.league * TROPHY_POINTS.league +
+        trophies.ucl * TROPHY_POINTS.ucl +
+        trophies.faCup * TROPHY_POINTS.faCup +
+        trophies.europa * TROPHY_POINTS.europa +
+        trophies.eflCup * TROPHY_POINTS.eflCup +
+        (trophies.other || 0) * TROPHY_POINTS.other +
+        (trophies.shield || 0) * TROPHY_POINTS.shield
+      );
+    };
+
+    // Calculate max values for normalization
+    const getMaxValues = (data) => ({
+      revenue: Math.max(...data.map(c => c.revenue)),
+      trophyPoints: Math.max(...data.map(c => calculateTrophyPoints(c.trophies))),
+      stadium: Math.max(...data.map(c => c.stadium)),
+      instagram: Math.max(...data.map(c => c.instagram)),
+      plSeasons: Math.max(...data.map(c => c.plSeasons)),
+      recordFee: Math.max(...data.map(c => c.recordFee)),
+    });
+
+    function ClubSizeRanker() {
+      const [weights, setWeights] = useState({
+        revenue: 50,
+        trophies: 50,
+        fanbase: 50,
+        plYears: 50,
+        transfers: 50,
+      });
+      
+      const [filterLeague, setFilterLeague] = useState('all');
+      const [hoveredClub, setHoveredClub] = useState(null);
+
+      const maxValues = useMemo(() => getMaxValues(clubData), []);
+
+      const rankedClubs = useMemo(() => {
+        const filtered = filterLeague === 'all' 
+          ? clubData 
+          : clubData.filter(c => c.league === filterLeague);
+
+        return filtered.map(club => {
+          const trophyPoints = calculateTrophyPoints(club.trophies);
+          const fanbaseScore = (club.stadium / maxValues.stadium * 0.5) + (club.instagram / maxValues.instagram * 0.5);
+          
+          const scores = {
+            revenue: club.revenue / maxValues.revenue,
+            trophies: trophyPoints / maxValues.trophyPoints,
+            fanbase: fanbaseScore,
+            plYears: club.plSeasons / maxValues.plSeasons,
+            transfers: club.recordFee / maxValues.recordFee,
+          };
+
+          const weightedScore = (
+            scores.revenue * (weights.revenue / 100) +
+            scores.trophies * (weights.trophies / 100) +
+            scores.fanbase * (weights.fanbase / 100) +
+            scores.plYears * (weights.plYears / 100) +
+            scores.transfers * (weights.transfers / 100)
+          );
+
+          const maxPossibleWeight = (weights.revenue + weights.trophies + weights.fanbase + weights.plYears + weights.transfers) / 100;
+          const normalizedScore = maxPossibleWeight > 0 ? weightedScore / maxPossibleWeight : 0;
+
+          return {
+            ...club,
+            scores,
+            totalScore: normalizedScore,
+            trophyPoints,
+          };
+        }).sort((a, b) => b.totalScore - a.totalScore);
+      }, [weights, filterLeague, maxValues]);
+
+      const importanceLevels = [
+        { value: 0, label: "Not at all important" },
+        { value: 25, label: "Slightly Important" },
+        { value: 50, label: "Important" },
+        { value: 75, label: "Fairly Important" },
+        { value: 100, label: "Very Important" },
+      ];
+
+      const Slider = ({ label, value, onChange, description }) => {
+        const currentLevel = importanceLevels.find(l => l.value === value) || importanceLevels[2];
+        
+        return (
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-medium text-gray-700">{label}</span>
+              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">{currentLevel.label}</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-2">{description}</p>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="25"
+              value={value}
+              onChange={(e) => onChange(parseInt(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        );
+      };
+
+      const ScoreBar = ({ score, color }) => (
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full ${color}`}
+            style={{ width: `${Math.max(score * 100, 2)}%` }}
+          />
+        </div>
+      );
+
+      const getLeagueColor = (league) => {
+        return league === 'Premier League' ? 'bg-purple-600' : 'bg-orange-500';
+      };
+
+      const getRankBadge = (rank) => {
+        if (rank === 1) return 'bg-yellow-400 text-yellow-900';
+        if (rank === 2) return 'bg-gray-300 text-gray-700';
+        if (rank === 3) return 'bg-amber-600 text-white';
+        return 'bg-gray-100 text-gray-600';
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                ⚽ English Football Club Size Calculator
+              </h1>
+              <p className="text-gray-600">
+                Adjust the importance of each category to see how clubs rank
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Controls Panel */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-4">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <span className="mr-2">⚙️</span> Category Weights
+                  </h2>
+                  
+                  <Slider
+                    label="💰 Revenue"
+                    value={weights.revenue}
+                    onChange={(v) => setWeights(w => ({ ...w, revenue: v }))}
+                    description="Annual club revenue (€ millions)"
+                  />
+                  
+                  <Slider
+                    label="🏆 Trophies"
+                    value={weights.trophies}
+                    onChange={(v) => setWeights(w => ({ ...w, trophies: v }))}
+                    description="League titles, European Cups, Domestic Cups"
+                  />
+                  
+                  <Slider
+                    label="🏟️ Stadium & Fanbase"
+                    value={weights.fanbase}
+                    onChange={(v) => setWeights(w => ({ ...w, fanbase: v }))}
+                    description="Stadium capacity + Instagram followers"
+                  />
+                  
+                  <Slider
+                    label="📅 Premier League Seasons"
+                    value={weights.plYears}
+                    onChange={(v) => setWeights(w => ({ ...w, plYears: v }))}
+                    description="Years in the top flight since 1992"
+                  />
+                  
+                  <Slider
+                    label="💎 Player Attraction"
+                    value={weights.transfers}
+                    onChange={(v) => setWeights(w => ({ ...w, transfers: v }))}
+                    description="Largest transfer fee paid"
+                  />
+
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Filter by League
+                    </label>
+                    <select
+                      value={filterLeague}
+                      onChange={(e) => setFilterLeague(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="all">All Clubs (44)</option>
+                      <option value="Premier League">Premier League (20)</option>
+                      <option value="Championship">Championship (24)</option>
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={() => setWeights({ revenue: 50, trophies: 50, fanbase: 50, plYears: 50, transfers: 50 })}
+                    className="mt-4 w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                  >
+                    Reset Weights
+                  </button>
+                </div>
+              </div>
+
+              {/* Rankings Panel */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                      <span className="mr-2">📊</span> Club Rankings
+                    </h2>
+                    <span className="text-sm text-gray-500">{rankedClubs.length} clubs</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {rankedClubs.map((club, index) => (
+                      <div
+                        key={club.name}
+                        className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                          hoveredClub === club.name 
+                            ? 'border-blue-400 bg-blue-50 shadow-md' 
+                            : 'border-gray-100 hover:border-gray-200 bg-white'
+                        }`}
+                        onMouseEnter={() => setHoveredClub(club.name)}
+                        onMouseLeave={() => setHoveredClub(null)}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${getRankBadge(index + 1)}`}>
+                              {index + 1}
+                            </span>
+                            <div>
+                              <h3 className="font-bold text-gray-800">{club.name}</h3>
+                              <span className={`text-xs px-2 py-0.5 rounded-full text-white ${getLeagueColor(club.league)}`}>
+                                {club.league}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-blue-600">
+                              {(club.totalScore * 100).toFixed(1)}
+                            </div>
+                            <div className="text-xs text-gray-500">Overall Score</div>
+                          </div>
+                        </div>
+
+                        {hoveredClub === club.name && (
+                          <div className="mt-4 pt-4 border-t border-gray-100">
+                            {/* Score bars row */}
+                            <div className="grid grid-cols-5 gap-2 mb-4">
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">Revenue</div>
+                                <ScoreBar score={club.scores.revenue} color="bg-green-500" />
+                                <div className="text-xs font-medium mt-1">€{club.revenue}m</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">Trophies</div>
+                                <ScoreBar score={club.scores.trophies} color="bg-yellow-500" />
+                                <div className="text-xs font-medium mt-1">{club.trophyPoints} pts</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">Fanbase</div>
+                                <ScoreBar score={club.scores.fanbase} color="bg-purple-500" />
+                                <div className="text-xs font-medium mt-1">{club.instagram}m IG</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">PL Years</div>
+                                <ScoreBar score={club.scores.plYears} color="bg-blue-500" />
+                                <div className="text-xs font-medium mt-1">{club.plSeasons} yrs</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xs text-gray-500 mb-1">Transfer</div>
+                                <ScoreBar score={club.scores.transfers} color="bg-red-500" />
+                                <div className="text-xs font-medium mt-1">£{club.recordFee}m</div>
+                              </div>
+                            </div>
+                            
+                            {/* Details row */}
+                            <div className="grid grid-cols-4 gap-4 text-xs bg-gray-50 rounded-lg p-3">
+                              {/* Trophies breakdown */}
+                              <div>
+                                <div className="font-semibold text-gray-700 mb-1">🏆 Trophies Won</div>
+                                <div className="space-y-0.5 text-gray-600">
+                                  {club.trophies.league > 0 && <div>League: {club.trophies.league}</div>}
+                                  {club.trophies.ucl > 0 && <div>UCL: {club.trophies.ucl}</div>}
+                                  {club.trophies.faCup > 0 && <div>FA Cup: {club.trophies.faCup}</div>}
+                                  {club.trophies.europa > 0 && <div>UEL: {club.trophies.europa}</div>}
+                                  {club.trophies.eflCup > 0 && <div>EFL Cup: {club.trophies.eflCup}</div>}
+                                  {club.trophies.other > 0 && <div>Other Euro: {club.trophies.other}</div>}
+                                  {club.trophies.shield > 0 && <div>Comm Shield: {club.trophies.shield}</div>}
+                                  {club.trophyPoints === 0 && <div className="italic">No major trophies</div>}
+                                </div>
+                              </div>
+                              
+                              {/* Revenue breakdown */}
+                              <div>
+                                <div className="font-semibold text-gray-700 mb-1">💰 Revenue (€m)</div>
+                                <div className="text-gray-600">
+                                  {club.revenue2122 && <div>21/22: €{club.revenue2122}m</div>}
+                                  {club.revenue2223 && <div>22/23: €{club.revenue2223}m</div>}
+                                  {club.revenue2324 && <div>23/24: €{club.revenue2324}m</div>}
+                                  <div className="font-medium mt-1">Avg: €{club.revenue}m</div>
+                                </div>
+                              </div>
+                              
+                              {/* Stadium */}
+                              <div>
+                                <div className="font-semibold text-gray-700 mb-1">🏟️ Stadium</div>
+                                <div className="text-gray-600">
+                                  <div>Capacity: {club.stadium.toLocaleString()}</div>
+                                  <div>IG: {club.instagram}m followers</div>
+                                </div>
+                              </div>
+                              
+                              {/* Record Transfer */}
+                              <div>
+                                <div className="font-semibold text-gray-700 mb-1">💎 Record Transfer</div>
+                                <div className="text-gray-600">
+                                  <div>{club.recordPlayer}</div>
+                                  <div className="font-medium">£{club.recordFee}m</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="mt-6 bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-bold text-gray-800 mb-4">📋 Category Breakdown</h3>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-xl">💰</span>
+                      <div>
+                        <strong>Revenue:</strong> 3-year average club revenue (2021/22–2023/24) in € millions. Includes broadcast, commercial, and matchday income.
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-xl">🏆</span>
+                      <div>
+                        <strong>Trophies:</strong> Points based on trophy type: League (5pts), UCL (5pts), FA Cup (3pts), UEL/Cup Winners' Cup (3pts), EFL Cup, Community Shield & other European (1pt each).
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-xl">🏟️</span>
+                      <div>
+                        <strong>Stadium & Fanbase:</strong> Weighted combination of stadium capacity (50%) and Instagram followers in millions (50%).
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-xl">📅</span>
+                      <div>
+                        <strong>Premier League Seasons:</strong> Total seasons in the top flight since the Premier League began in 1992/93.
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3">
+                      <span className="text-xl">💎</span>
+                      <div>
+                        <strong>Player Attraction:</strong> Record transfer fee paid by the club (£ millions), indicating financial pull for top talent.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <footer className="text-center mt-8 text-gray-500 text-sm">
+              Data based on 2024/25 season statistics • Premier League & Championship 2025/26
+            </footer>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<ClubSizeRanker />);
+  </script>
+</body>
+</html>
