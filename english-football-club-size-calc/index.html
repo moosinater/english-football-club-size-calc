@@ -92,7 +92,7 @@
 
     // Calculate max values for normalization
     const getMaxValues = (data) => ({
-      revenue: Math.max(...data.map(c => c.revenue)),
+      revenue: Math.max(...data.map(c => c.revenue2324)),
       trophyPoints: Math.max(...data.map(c => calculateTrophyPoints(c.trophies))),
       stadium: Math.max(...data.map(c => c.stadium)),
       instagram: Math.max(...data.map(c => c.instagram)),
@@ -124,7 +124,7 @@
           const fanbaseScore = (club.stadium / maxValues.stadium * 0.5) + (club.instagram / maxValues.instagram * 0.5);
           
           const scores = {
-            revenue: club.revenue / maxValues.revenue,
+            revenue: club.revenue2324 / maxValues.revenue,
             trophies: trophyPoints / maxValues.trophyPoints,
             fanbase: fanbaseScore,
             plYears: club.plSeasons / maxValues.plSeasons,
@@ -337,7 +337,7 @@
                               <div className="text-center">
                                 <div className="text-xs text-gray-500 mb-1">Revenue</div>
                                 <ScoreBar score={club.scores.revenue} color="bg-green-500" />
-                                <div className="text-xs font-medium mt-1">€{club.revenue}m</div>
+                                <div className="text-xs font-medium mt-1">€{club.revenue2324}m</div>
                               </div>
                               <div className="text-center">
                                 <div className="text-xs text-gray-500 mb-1">Trophies</div>
@@ -378,14 +378,11 @@
                                 </div>
                               </div>
                               
-                              {/* Revenue breakdown */}
+                              {/* Revenue */}
                               <div>
-                                <div className="font-semibold text-gray-700 mb-1">💰 Revenue (€m)</div>
+                                <div className="font-semibold text-gray-700 mb-1">💰 Revenue 23/24</div>
                                 <div className="text-gray-600">
-                                  {club.revenue2122 && <div>21/22: €{club.revenue2122}m</div>}
-                                  {club.revenue2223 && <div>22/23: €{club.revenue2223}m</div>}
-                                  {club.revenue2324 && <div>23/24: €{club.revenue2324}m</div>}
-                                  <div className="font-medium mt-1">Avg: €{club.revenue}m</div>
+                                  <div className="font-medium">€{club.revenue2324}m</div>
                                 </div>
                               </div>
                               
@@ -421,7 +418,7 @@
                     <div className="flex items-start space-x-3">
                       <span className="text-xl">💰</span>
                       <div>
-                        <strong>Revenue:</strong> 3-year average club revenue (2021/22–2023/24) in € millions. Includes broadcast, commercial, and matchday income.
+                        <strong>Revenue:</strong> Club revenue for 2023/24 season in € millions. Includes broadcast, commercial, and matchday income.
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
